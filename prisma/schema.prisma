@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("LOCAL_DATABASE_URL")
+}
+
+model User {
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  password    String
+  phone       String
+  profile     String        @default("profile.png")
+  is_active   Boolean       @default(false)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  publication Publication[]
+}
+
+model Publication {
+  id         Int       @id @default(autoincrement())
+  user       User      @relation(fields: [user_id], references: [id])
+  user_id    Int
+  image_url  String
+  contenu    String
+  reactions  Int       @default(0)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  comments   Comment[]
+}
+
+model Comment {
+  id               Int         @id @default(autoincrement())
+  publication      Publication @relation(fields: [publication_id], references: [id])
+  publication_id   Int
+  first_message    Message     @relation(name: "CommentFirstMessage", fields: [first_message_id], references: [id])
+  first_message_id Int         @unique
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  replies          Message[]   @relation(name: "CommentReplies")
+}
+
+model Message {
+  id             Int      @id @default(autoincrement())
+  content        String
+  reactions      Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  commentFirst   Comment? @relation(name: "CommentFirstMessage")
+  commentReplies Comment? @relation(name: "CommentReplies", fields: [comment_id], references: [id])
+  comment_id     Int
+}
