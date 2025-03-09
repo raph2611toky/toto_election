@@ -17,7 +17,11 @@ exports.registerAdmin = async (req, res) => {
                 use_filename: true,
                 unique_filename: false
             });
-            profileUrl = result.secure_url;
+
+            profileUrl = cloudinary.url(result.public_id, {
+                fetch_format: "auto",
+                quality: "auto"
+            });
 
             await fs.unlink(req.file.path);
         }
