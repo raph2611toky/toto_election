@@ -8,7 +8,7 @@ const uploadDefaultProfileImage = async () => {
         const result = await cloudinary.uploader.upload(defaultImagePath, {
             folder: "admin_profiles",
             public_id: "default_profile",
-            overwrite: false 
+            overwrite: false
         });
 
         return result.secure_url;
