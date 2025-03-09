@@ -2,6 +2,7 @@ const User = require("../models/user.model");
 const { generateToken } = require("../utils/securite/jwt");
 const cloudinary = require("../config/cloudinary.config");
 const fs = require("fs").promises;
+const { uploadDefaultProfileImage } = require("../utils/cloudinary.utils");
 
 exports.registerAdmin = async (req, res) => {
     try {
@@ -10,20 +11,17 @@ exports.registerAdmin = async (req, res) => {
             return res.status(401).json({ error: "Cet administrateur s'est déjà enregistré" });
         }
 
-        let profileUrl = "profile.png";
+        let profileUrl;
         if (req.file) {
             const result = await cloudinary.uploader.upload(req.file.path, {
                 folder: "admin_profiles",
                 use_filename: true,
                 unique_filename: false
             });
-
-            profileUrl = cloudinary.url(result.public_id, {
-                fetch_format: "auto",
-                quality: "auto"
-            });
-
+            profileUrl = result.secure_url;
             await fs.unlink(req.file.path);
+        } else {
+            profileUrl = await uploadDefaultProfileImage();
         }
 
         const adminData = {
@@ -75,6 +73,7 @@ exports.getAdminProfile = async (req, res) => {
 exports.updateAdminProfile = async (req, res) => {
     try {
         let updateData = { ...req.body };
+        const existingUser = await User.getById(req.user.id);
 
         if (req.file) {
             const result = await cloudinary.uploader.upload(req.file.path, {
@@ -83,8 +82,9 @@ exports.updateAdminProfile = async (req, res) => {
                 unique_filename: false
             });
             updateData.profile = result.secure_url;
-
             await fs.unlink(req.file.path);
+        } else if (!existingUser.profile) {
+            updateData.profile = await uploadDefaultProfileImage();
         }
 
         const updatedUser = await User.update(req.user.id, updateData);

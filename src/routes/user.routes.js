@@ -184,7 +184,7 @@ router.get("/me", IsAuthenticated, getAdminProfile);
  *               profile:
  *                 type: string
  *                 format: binary
- *                 description: Image de profil (optionnel)
+ *                 description: Image de profil (optionnel, une image par défaut sera utilisée si non fournie)
  *     responses:
  *       201:
  *         description: Administrateur créé avec succès
@@ -317,7 +317,7 @@ router.post("/login", loginAdmin);
  *               profile:
  *                 type: string
  *                 format: binary
- *                 description: Nouvelle image de profil (optionnel)
+ *                 description: Nouvelle image de profil (optionnel, l'image par défaut sera utilisée si aucune image n'existe encore)
  *     responses:
  *       200:
  *         description: Profil mis à jour avec succès
