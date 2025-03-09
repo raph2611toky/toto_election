@@ -5,7 +5,7 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "API de Gestion Reservation Chambre",
+      title: "API Pour le site web d'election de Toto à l'AEENI",
       version: "1.0.0",
     },
   },
