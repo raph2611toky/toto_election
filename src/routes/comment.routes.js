@@ -4,17 +4,20 @@ const {
     createComment, 
     getCommentsByPublication, 
     createReply, 
-    deleteComment 
+    deleteComment,
+    getMessagesByComment,
+    likeMessage,
+    dislikeMessage
 } = require("../controllers/comment.controller");
-const { createCommentValidationRules } = require("../validators/comment.validator");
-const validateHandler = require("../middlewares/error.handler");
 const { IsAuthenticated } = require("../middlewares/auth.middleware");
+const validateHandler = require("../middlewares/error.handler");
+const { createCommentValidationRules } = require("../validators/comment.validator"); // Assurez-vous que ce fichier existe
 
 /**
  * @swagger
  * tags:
  *   name: Comments
- *   description: Gestion des commentaires et discussions
+ *   description: Gestion des commentaires
  */
 
 /**
@@ -23,19 +26,16 @@ const { IsAuthenticated } = require("../middlewares/auth.middleware");
  *   schemas:
  *     Comment:
  *       type: object
- *       required:
- *         - publication_id
- *         - first_message_id
  *       properties:
  *         id:
  *           type: integer
- *           description: ID unique du commentaire
+ *           description: ID du commentaire
  *         publication_id:
  *           type: integer
  *           description: ID de la publication associée
  *         first_message_id:
  *           type: integer
- *           description: ID du premier message de la discussion
+ *           description: ID du premier message
  *         created_at:
  *           type: string
  *           format: date-time
@@ -45,65 +45,53 @@ const { IsAuthenticated } = require("../middlewares/auth.middleware");
  *           format: date-time
  *           description: Date de mise à jour
  *         first_message:
- *           $ref: '#/components/schemas/Message'
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             content:
+ *               type: string
+ *             reactions:
+ *               type: integer
+ *             created_at:
+ *               type: string
+ *               format: date-time
+ *             updated_at:
+ *               type: string
+ *               format: date-time
+ *             comment_id:
+ *               type: integer
+ *               nullable: true
  *         replies:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Message'
- *       example:
- *         id: 1
- *         publication_id: 1
- *         first_message_id: 1
- *         created_at: "2023-10-01T10:00:00Z"
- *         updated_at: "2023-10-01T10:00:00Z"
- *         first_message:
- *           id: 1
- *           content: "Ceci est le premier message."
- *           reactions: 0
- *           created_at: "2023-10-01T10:00:00Z"
- *           updated_at: "2023-10-01T10:00:00Z"
- *         replies:
- *           - id: 2
- *             content: "Ceci est une réponse."
- *             reactions: 0
- *             created_at: "2023-10-01T10:05:00Z"
- *             updated_at: "2023-10-01T10:05:00Z"
- *     Message:
- *       type: object
- *       required:
- *         - content
- *       properties:
- *         id:
- *           type: integer
- *           description: ID unique du message
- *         content:
- *           type: string
- *           description: Contenu du message
- *         reactions:
- *           type: integer
- *           description: Nombre de réactions
- *         created_at:
- *           type: string
- *           format: date-time
- *           description: Date de création
- *         updated_at:
- *           type: string
- *           format: date-time
- *           description: Date de mise à jour
- *       example:
- *         id: 1
- *         content: "Ceci est un message."
- *         reactions: 0
- *         created_at: "2023-10-01T10:00:00Z"
- *         updated_at: "2023-10-01T10:00:00Z"
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               content:
+ *                 type: string
+ *               reactions:
+ *                 type: integer
+ *               created_at:
+ *                 type: string
+ *                 format: date-time
+ *               updated_at:
+ *                 type: string
+ *                 format: date-time
+ *               comment_id:
+ *                 type: integer
+ *           description: Liste des réponses au commentaire
  */
 
 /**
  * @swagger
  * /api/publications/{id}/comments:
  *   post:
- *     summary: Créer un nouveau commentaire (discussion)
+ *     summary: Créer un nouveau commentaire pour une publication
  *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -122,8 +110,8 @@ const { IsAuthenticated } = require("../middlewares/auth.middleware");
  *             properties:
  *               content:
  *                 type: string
- *                 description: Contenu du premier message
- *                 example: "Ceci est un commentaire."
+ *                 description: Contenu du commentaire
+ *                 example: "Ceci est un commentaire"
  *     responses:
  *       201:
  *         description: Commentaire créé avec succès
@@ -134,8 +122,6 @@ const { IsAuthenticated } = require("../middlewares/auth.middleware");
  *               properties:
  *                 comment:
  *                   $ref: '#/components/schemas/Comment'
- *                 firstMessage:
- *                   $ref: '#/components/schemas/Message'
  *       404:
  *         description: Publication non trouvée
  *         content:
@@ -157,7 +143,7 @@ const { IsAuthenticated } = require("../middlewares/auth.middleware");
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.post("/publications/:id/comments", createCommentValidationRules, validateHandler, createComment);
+router.post("/publications/:id/comments", IsAuthenticated, createCommentValidationRules, validateHandler, createComment);
 
 /**
  * @swagger
@@ -174,13 +160,16 @@ router.post("/publications/:id/comments", createCommentValidationRules, validate
  *         description: ID de la publication
  *     responses:
  *       200:
- *         description: Liste des commentaires
+ *         description: Liste des commentaires avec leurs premiers messages et réponses
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
  *       404:
  *         description: Publication non trouvée
  *         content:
@@ -208,8 +197,10 @@ router.get("/publications/:id/comments", getCommentsByPublication);
  * @swagger
  * /api/comments/{commentId}/replies:
  *   post:
- *     summary: Ajouter une réponse à un commentaire (discussion)
+ *     summary: Ajouter une réponse à un commentaire
  *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: commentId
@@ -229,14 +220,17 @@ router.get("/publications/:id/comments", getCommentsByPublication);
  *               content:
  *                 type: string
  *                 description: Contenu de la réponse
- *                 example: "Ceci est une réponse."
+ *                 example: "Ceci est une réponse"
  *     responses:
  *       201:
  *         description: Réponse ajoutée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Message'
+ *               type: object
+ *               properties:
+ *                 comment:
+ *                   $ref: '#/components/schemas/Comment'
  *       404:
  *         description: Commentaire non trouvé
  *         content:
@@ -258,13 +252,13 @@ router.get("/publications/:id/comments", getCommentsByPublication);
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.post("/comments/:commentId/replies", createCommentValidationRules, validateHandler, createReply);
+router.post("/comments/:commentId/replies", IsAuthenticated, createCommentValidationRules, validateHandler, createReply);
 
 /**
  * @swagger
  * /api/comments/{commentId}:
  *   delete:
- *     summary: Supprimer un commentaire (discussion)
+ *     summary: Supprimer un commentaire
  *     tags: [Comments]
  *     security:
  *       - BearerAuth: []
@@ -278,6 +272,10 @@ router.post("/comments/:commentId/replies", createCommentValidationRules, valida
  *     responses:
  *       204:
  *         description: Commentaire supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
  *       404:
  *         description: Commentaire non trouvé
  *         content:
@@ -300,5 +298,89 @@ router.post("/comments/:commentId/replies", createCommentValidationRules, valida
  *                   example: "Erreur interne du serveur"
  */
 router.delete("/comments/:commentId", IsAuthenticated, deleteComment);
+
+/**
+ * @swagger
+ * /api/comments/{commentId}/messages:
+ *   get:
+ *     summary: Récupérer tous les messages d'un commentaire
+ *     tags: [Comments]
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Liste des messages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Message'
+ *       404:
+ *         description: Commentaire non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get("/comments/:commentId/messages", getMessagesByComment);
+
+/**
+ * @swagger
+ * /api/messages/{messageId}/react/like:
+ *   post:
+ *     summary: Réagir à un message
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Réaction enregistrée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Message'
+ *       404:
+ *         description: Message non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post("/messages/:messageId/react/like", IsAuthenticated, likeMessage);
+
+/**
+ * @swagger
+ * /api/messages/{messageId}/react/dislike:
+ *   post:
+ *     summary: Réagir à un message
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Réaction enregistrée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Message'
+ *       404:
+ *         description: Message non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post("/messages/:messageId/react/dislike", IsAuthenticated, dislikeMessage);
 
 module.exports = router;

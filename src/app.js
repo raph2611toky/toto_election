@@ -4,10 +4,9 @@ const { swaggerUi, swaggerSpec } = require("./docs/swagger");
 const morgan = require('morgan');
 const cors = require('cors');
 
-const roomRoutes = require("./routes/room.routes")
+const publicationRoutes = require("./routes/publication.routes")
 const userRoutes = require("./routes/user.routes")
-const reservationRoutes = require("./routes/reservation.routes")
-const notifications = require("./routes/notification.routes")
+const commentsRoutes = require("./routes/comment.routes")
 
 const app = express();
 
@@ -16,10 +15,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(cors());
 
-app.use("/api/rooms", roomRoutes);
-app.use("/api/users", userRoutes)
-app.use("/api/reservations",reservationRoutes)
-app.use("/api/notifications", notifications)
+app.use("/api/publications", publicationRoutes);
+app.use("/api/admins", userRoutes)
+app.use("/api",commentsRoutes)
 
 // Swagger docs api
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

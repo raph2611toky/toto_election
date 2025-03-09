@@ -51,5 +51,5 @@ model Message {
   updated_at     DateTime @updatedAt
   commentFirst   Comment? @relation(name: "CommentFirstMessage")
   commentReplies Comment? @relation(name: "CommentReplies", fields: [comment_id], references: [id])
-  comment_id     Int
+  comment_id     Int?
 }

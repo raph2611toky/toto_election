@@ -2,7 +2,7 @@ const User = require("../models/user.model");
 const { generateToken } = require("../utils/securite/jwt");
 const cloudinary = require("../config/cloudinary.config");
 const fs = require("fs").promises;
-const { uploadDefaultProfileImage } = require("../utils/cloudinary.utils");
+const { uploadDefaultProfileImage, deleteImageFromCloudinary } = require("../utils/cloudinary.utils");
 
 exports.registerAdmin = async (req, res) => {
     try {
@@ -13,6 +13,13 @@ exports.registerAdmin = async (req, res) => {
 
         let profileUrl;
         if (req.file) {
+            try {
+                await fs.access(req.file.path);
+            } catch (error) {
+                console.error("Le fichier n'a pas été correctement transféré:", error);
+                return res.status(400).json({ error: "Erreur lors du transfert de l'image" });
+            }
+
             const result = await cloudinary.uploader.upload(req.file.path, {
                 folder: "admin_profiles",
                 use_filename: true,
@@ -74,13 +81,32 @@ exports.updateAdminProfile = async (req, res) => {
     try {
         let updateData = { ...req.body };
         const existingUser = await User.getById(req.user.id);
+        if (!existingUser) {
+            return res.status(404).json({ error: "Utilisateur non trouvé" });
+        }
 
         if (req.file) {
+            try {
+                await fs.access(req.file.path);
+            } catch (error) {
+                console.error("Le fichier n'a pas été correctement transféré:", error);
+                return res.status(400).json({ error: "Erreur lors du transfert de l'image" });
+            }
+
             const result = await cloudinary.uploader.upload(req.file.path, {
                 folder: "admin_profiles",
                 use_filename: true,
                 unique_filename: false
             });
+
+            if (!result.secure_url) {
+                throw new Error("Échec de l'upload sur Cloudinary");
+            }
+
+            if (existingUser.profile && !existingUser.profile.includes("default_profile")) {
+                await deleteImageFromCloudinary(existingUser.profile);
+            }
+
             updateData.profile = result.secure_url;
             await fs.unlink(req.file.path);
         } else if (!existingUser.profile) {

@@ -17,17 +17,30 @@ class Comment {
     static async getById(id) {
         const comment = await prisma.comment.findUnique({
             where: { id },
-            include: { first_message: true, replies: true }, // Inclure le premier message et les réponses
+            include: { 
+                first_message: true, 
+                replies: true
+            },
         });
-        return comment ? Comment.fromPrisma(comment) : null;
+        if (!comment) return null;
+
+        const result = Comment.fromPrisma(comment);
+        result.first_message = comment.first_message;
+        result.replies = comment.replies || [];
+        return result;
     }
 
     static async getByPublicationId(publication_id) {
         const comments = await prisma.comment.findMany({
             where: { publication_id },
-            include: { first_message: true, replies: true }, // Inclure le premier message et les réponses
+            include: { first_message: true, replies: true },
         });
-        return comments.map(Comment.fromPrisma);
+        return comments.map(comment => {
+            const result = Comment.fromPrisma(comment);
+            result.first_message = comment.first_message;
+            result.replies = comment.replies || [];
+            return result;
+        });
     }
 
     static async create(data) {

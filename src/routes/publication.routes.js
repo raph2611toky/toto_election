@@ -5,7 +5,9 @@ const {
     getAllPublications, 
     getPublicationById, 
     updatePublication, 
-    deletePublication 
+    deletePublication,
+    likePublication,
+    dislikePublication
 } = require("../controllers/publication.controller");
 const { createPublicationValidationRules, updatePublicationValidationRules } = require("../validators/publication.validator");
 const validateHandler = require("../middlewares/error.handler");
@@ -45,6 +47,9 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *         reactions:
  *           type: integer
  *           description: Nombre de réactions
+ *         comment_count:
+ *           type: integer
+ *           description: Nombre de commentaires
  *         created_at:
  *           type: string
  *           format: date-time
@@ -56,7 +61,7 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *       example:
  *         id: 1
  *         user_id: 1
- *         image_url: "https://res.cloudinary.com/example/image/upload/v1234567890/publication.jpg"
+ *         image_url: "https://res.cloudinary.com/example/image/upload/v1234567890/publications/publication.jpg"
  *         contenu: "Ceci est une publication de test."
  *         reactions: 0
  *         created_at: "2023-10-01T10:00:00Z"
@@ -96,6 +101,16 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Publication'
+ *       400:
+ *         description: Aucune image fournie ou données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Aucune image fournie"
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -198,17 +213,17 @@ router.get("/:id", getPublicationById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               image_url:
+ *               image:
  *                 type: string
- *                 description: Nouvelle URL de l'image
- *                 example: "https://res.cloudinary.com/example/image/upload/v1234567890/new_image.jpg"
+ *                 format: binary
+ *                 description: Nouvelle image de la publication (optionnel)
  *               contenu:
  *                 type: string
- *                 description: Nouveau contenu
+ *                 description: Nouveau contenu (optionnel)
  *                 example: "Ceci est une publication mise à jour."
  *     responses:
  *       200:
@@ -237,6 +252,16 @@ router.get("/:id", getPublicationById);
  *                 error:
  *                   type: string
  *                   example: "Publication non trouvée"
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur lors du transfert de l'image"
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -248,11 +273,11 @@ router.get("/:id", getPublicationById);
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.put("/:id", IsAuthenticated, updatePublicationValidationRules, validateHandler, updatePublication);
+router.put("/:id", IsAuthenticated, upload.single("image"), updatePublicationValidationRules, validateHandler, updatePublication);
 
 /**
  * @swagger
- * /api/publications/{id}:
+ * /api/publications/{id}/delete:
  *   delete:
  *     summary: Supprimer une publication
  *     tags: [Publications]
@@ -299,6 +324,58 @@ router.put("/:id", IsAuthenticated, updatePublicationValidationRules, validateHa
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.delete("/:id", IsAuthenticated, deletePublication);
+router.delete("/:id/delete", IsAuthenticated, deletePublication);
+
+/**
+ * @swagger
+ * /api/publications/{id}/react/like:
+ *   put:
+ *     summary: Réagir à une publication
+ *     tags: [Publications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Réaction enregistrée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Publication'
+ *       404:
+ *         description: Publication non trouvée
+ *       500:
+ *         description: Erreur serveur
+ */
+router.put("/:id/react/like", likePublication);
+
+/**
+ * @swagger
+ * /api/publications/{id}/react/dislike:
+ *   put:
+ *     summary: Réagir à une publication
+ *     tags: [Publications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Réaction enregistrée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Publication'
+ *       404:
+ *         description: Publication non trouvée
+ *       500:
+ *         description: Erreur serveur
+ */
+router.put("/:id/react/dislike", dislikePublication);
 
 module.exports = router;

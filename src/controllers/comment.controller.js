@@ -1,6 +1,7 @@
 const Comment = require("../models/comment.model");
 const Message = require("../models/message.model");
 const Publication = require("../models/publication.model");
+const { prisma } = require("../models/comment.model");
 
 exports.createComment = async (req, res) => {
     try {
@@ -20,7 +21,13 @@ exports.createComment = async (req, res) => {
         };
         const newComment = await Comment.create(commentData);
 
-        res.status(201).json({ comment: newComment, firstMessage });
+        const responseComment = {
+            ...newComment,
+            first_message: firstMessage,
+            replies: []
+        };
+
+        res.status(201).json({ comment: responseComment });
     } catch (error) {
         console.error("Erreur lors de la création du commentaire:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -35,7 +42,18 @@ exports.getCommentsByPublication = async (req, res) => {
         }
 
         const comments = await Comment.getByPublicationId(parseInt(req.params.id));
-        res.status(200).json(comments);
+        const formattedComments = await Promise.all(
+            comments.map(async (comment) => {
+                const firstMessage = await Message.getById(comment.first_message_id);
+                return {
+                    ...comment,
+                    first_message: firstMessage,
+                    replies: comment.replies || []
+                };
+            })
+        );
+
+        res.status(200).json({ comments: formattedComments });
     } catch (error) {
         console.error("Erreur lors de la récupération des commentaires:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -51,19 +69,19 @@ exports.createReply = async (req, res) => {
 
         const replyData = {
             content: req.body.content,
+            comment_id: comment.id
         };
         const newReply = await Message.create(replyData);
 
-        await prisma.comment.update({
-            where: { id: parseInt(req.params.commentId) },
-            data: {
-                replies: {
-                    connect: { id: newReply.id },
-                },
-            },
-        });
+        const updatedComment = await Comment.getById(parseInt(req.params.commentId));
 
-        res.status(201).json(newReply);
+        const responseComment = {
+            ...updatedComment,
+            first_message: updatedComment.first_message,
+            replies: updatedComment.replies || []
+        };
+
+        res.status(201).json({ comment: responseComment });
     } catch (error) {
         console.error("Erreur lors de la création de la réponse:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -83,9 +101,64 @@ exports.deleteComment = async (req, res) => {
         }
 
         await Comment.delete(parseInt(req.params.commentId));
-        res.status(204).send();
+
+        res.status(204).json({});
     } catch (error) {
         console.error("Erreur lors de la suppression du commentaire:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.getMessagesByComment = async (req, res) => {
+    try {
+        const comment = await Comment.getById(parseInt(req.params.commentId));
+        if (!comment) {
+            return res.status(404).json({ error: "Commentaire non trouvé" });
+        }
+
+        const messages = [comment.first_message, ...comment.replies];
+
+        res.status(200).json(messages);
+    } catch (error) {
+        console.error("Erreur lors de la récupération des messages:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.likeMessage = async (req, res) => {
+    try {
+        const message = await Message.getById(parseInt(req.params.messageId));
+        if (!message) {
+            return res.status(404).json({ error: "Message non trouvé" });
+        }
+
+        const updatedMessage = await prisma.message.update({
+            where: { id: message.id },
+            data: { reactions: message.reactions + 1 }
+        });
+
+        res.status(200).json(updatedMessage);
+    } catch (error) {
+        console.error("Erreur lors de la réaction au message:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.dislikeMessage = async (req, res) => {
+    try {
+        const message = await Message.getById(parseInt(req.params.messageId));
+        if (!message) {
+            return res.status(404).json({ error: "Message non trouvé" });
+        }
+
+        const updatedMessage = await prisma.message.update({
+            where: { id: message.id },
+            data: { reactions: message.reactions - 1? message.reactions - 1: 0 }
+        });
+
+        res.status(200).json(updatedMessage);
+    } catch (error) {
+        console.error("Erreur lors de la réaction au message:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
     }
 };
