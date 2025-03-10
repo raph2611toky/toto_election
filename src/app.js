@@ -22,4 +22,8 @@ app.use("/api",commentsRoutes)
 // Swagger docs api
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+app.get("/", (req, res) => {
+    res.send("Welcome to Toto Election API! Visit /api/docs for the API documentation.");
+});
+
 module.exports = app;
