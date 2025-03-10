@@ -124,3 +124,5 @@ dist
 
 /prisma/migrations/
 .env
+.vercel
+.env*.local
