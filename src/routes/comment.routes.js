@@ -90,8 +90,6 @@ const { createCommentValidationRules } = require("../validators/comment.validato
  *   post:
  *     summary: Créer un nouveau commentaire pour une publication
  *     tags: [Comments]
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -143,7 +141,7 @@ const { createCommentValidationRules } = require("../validators/comment.validato
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.post("/publications/:id/comments", IsAuthenticated, createCommentValidationRules, validateHandler, createComment);
+router.post("/publications/:id/comments", createCommentValidationRules, validateHandler, createComment);
 
 /**
  * @swagger
@@ -199,8 +197,6 @@ router.get("/publications/:id/comments", getCommentsByPublication);
  *   post:
  *     summary: Ajouter une réponse à un commentaire
  *     tags: [Comments]
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: commentId
@@ -252,7 +248,7 @@ router.get("/publications/:id/comments", getCommentsByPublication);
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.post("/comments/:commentId/replies", IsAuthenticated, createCommentValidationRules, validateHandler, createReply);
+router.post("/comments/:commentId/replies", createCommentValidationRules, validateHandler, createReply);
 
 /**
  * @swagger
@@ -260,8 +256,6 @@ router.post("/comments/:commentId/replies", IsAuthenticated, createCommentValida
  *   delete:
  *     summary: Supprimer un commentaire
  *     tags: [Comments]
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: commentId
@@ -297,7 +291,7 @@ router.post("/comments/:commentId/replies", IsAuthenticated, createCommentValida
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.delete("/comments/:commentId", IsAuthenticated, deleteComment);
+router.delete("/comments/:commentId", deleteComment);
 
 /**
  * @swagger
@@ -333,8 +327,6 @@ router.get("/comments/:commentId/messages", getMessagesByComment);
  *   post:
  *     summary: Réagir à un message
  *     tags: [Comments]
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: messageId
@@ -353,7 +345,7 @@ router.get("/comments/:commentId/messages", getMessagesByComment);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/messages/:messageId/react/like", IsAuthenticated, likeMessage);
+router.post("/messages/:messageId/react/like", likeMessage);
 
 /**
  * @swagger
@@ -361,8 +353,6 @@ router.post("/messages/:messageId/react/like", IsAuthenticated, likeMessage);
  *   post:
  *     summary: Réagir à un message
  *     tags: [Comments]
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: messageId
@@ -381,6 +371,6 @@ router.post("/messages/:messageId/react/like", IsAuthenticated, likeMessage);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/messages/:messageId/react/dislike", IsAuthenticated, dislikeMessage);
+router.post("/messages/:messageId/react/dislike", dislikeMessage);
 
 module.exports = router;

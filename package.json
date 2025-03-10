@@ -1,7 +1,7 @@
 {
-  "name": "reservation_chambre",
+  "name": "toto_election",
   "version": "1.0.0",
-  "description": "Reservation chambre",
+  "description": "Api rest pour site web concernant Toto pour l'election",
   "main": "./src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
