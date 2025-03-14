@@ -29,6 +29,7 @@ exports.createPublication = async (req, res) => {
             user_id: req.user.id,
             image_url: result.secure_url,
             contenu: req.body.contenu,
+            titre: req.body.titre,
         };
         const newPublication = await Publication.create(publicationData);
         newPublication.comment_count = 0; // Nouvelle publication, aucun commentaire

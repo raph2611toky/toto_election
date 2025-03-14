@@ -2,8 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class Publication {
-    constructor(id, user_id, image_url, contenu, reactions = 0, created_at = null, updated_at = null) {
+    constructor(id, titre, user_id, image_url, contenu, reactions = 0, created_at = null, updated_at = null) {
         this.id = id;
+        this.titre = titre;
         this.user_id = user_id;
         this.image_url = image_url;
         this.contenu = contenu;
@@ -13,7 +14,7 @@ class Publication {
     }
 
     static fromPrisma(publication) {
-        return new Publication(publication.id, publication.user_id, publication.image_url, publication.contenu, publication.reactions, publication.created_at, publication.updated_at);
+        return new Publication(publication.id, publication.titre, publication.user_id, publication.image_url, publication.contenu, publication.reactions, publication.created_at, publication.updated_at);
     }
 
     static async getById(id) {
