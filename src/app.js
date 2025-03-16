@@ -19,6 +19,7 @@ app.use("/api/publications", publicationRoutes);
 app.use("/api/admins", userRoutes)
 app.use("/api",commentsRoutes)
 
+
 // Swagger docs api
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

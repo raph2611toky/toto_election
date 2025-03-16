@@ -7,7 +7,13 @@ const options = {
     info: {
       title: "API Pour le site web d'election de Toto à l'AEENI",
       version: "1.0.0",
+      description: 'API REST pour le site Toto Election',
     },
+    servers: [
+      {
+        url: 'https://phenix-nu.vercel.app',
+      },
+    ],
   },
   components: {
     securitySchemes: {
