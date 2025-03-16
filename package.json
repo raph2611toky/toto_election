@@ -31,7 +31,8 @@
     "prisma": "^6.4.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "twilio": "^5.4.5"
+    "twilio": "^5.4.5",
+    "z-schema": "^6.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
