@@ -275,6 +275,78 @@ router.get("/", getAllPublications);
  */
 router.get("/:id", getPublicationById);
 
+
+/**
+ * @swagger
+ * /api/publications:
+ *   get:
+ *     summary: Récupérer toutes les publications
+ *     tags: [Publications]
+ *     responses:
+ *       200:
+ *         description: Liste des publications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Publication'
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur interne du serveur"
+ */
+router.get("/", getAllPublicationsDetails);
+
+/**
+ * @swagger
+ * /api/publications/{id}:
+ *   get:
+ *     summary: Récupérer une publication par ID
+ *     tags: [Publications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la publication
+ *     responses:
+ *       200:
+ *         description: Détails de la publication
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Publication'
+ *       404:
+ *         description: Publication non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Publication non trouvée"
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur interne du serveur"
+ */
+router.get("/:id", getPublicationByIdDetails);
+
 /**
  * @swagger
  * /api/publications/{id}:

@@ -74,6 +74,37 @@ exports.getPublicationById = async (req, res) => {
     }
 };
 
+exports.getAllPublicationsDetails = async (req, res) => {
+    try {
+        const publications = await Publication.getAll();
+        const formattedPublications = publications.map(pub => ({
+            ...pub,
+            comment_count: pub.comments.length
+        }));
+        res.status(200).json({ publications: formattedPublications });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des publications:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.getPublicationByIdDetails = async (req, res) => {
+    try {
+        const publication = await Publication.getById(parseInt(req.params.id));
+        if (!publication) {
+            return res.status(404).json({ error: "Publication non trouvée" });
+        }
+        const formattedPublication = {
+            ...publication,
+            comment_count: publication.comments.length,
+        };
+        res.status(200).json(formattedPublication);
+    } catch (error) {
+        console.error("Erreur lors de la récupération de la publication:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
 exports.updatePublication = async (req, res) => {
     try {
         const publication = await Publication.getById(parseInt(req.params.id));
