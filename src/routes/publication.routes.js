@@ -4,6 +4,8 @@ const {
     createPublication, 
     getAllPublications, 
     getPublicationById, 
+    getAllPublicationsDetails, 
+    getPublicationByIdDetails, 
     updatePublication, 
     deletePublication,
     likePublication,
@@ -85,6 +87,48 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *         created_at: "2023-10-01T10:05:00Z"
  *         updated_at: "2023-10-01T10:05:00Z"
  *     Publication:
+ *       type: object
+ *       required:
+ *         - user_id
+ *         - image_url
+ *         - contenu
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: ID unique de la publication
+ *         user_id:
+ *           type: integer
+ *           description: ID de l'administrateur qui a créé la publication
+ *         image_url:
+ *           type: string
+ *           description: URL de l'image de la publication
+ *         contenu:
+ *           type: string
+ *           description: Contenu de la publication
+ *         reactions:
+ *           type: integer
+ *           description: Nombre de réactions
+ *         comment_count:
+ *           type: integer
+ *           description: Nombre de commentaires
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: Date de création
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: Date de mise à jour
+ *       example:
+ *         id: 1
+ *         user_id: 1
+ *         image_url: "https://res.cloudinary.com/example/image/upload/v1234567890/publications/publication.jpg"
+ *         contenu: "Ceci est une publication de test."
+ *         reactions: 0
+ *         comment_count: 1
+ *         created_at: "2023-10-01T10:00:00Z"
+ *         updated_at: "2023-10-01T10:00:00Z"
+ *     PublicationWithComments:
  *       type: object
  *       required:
  *         - user_id
@@ -205,7 +249,7 @@ router.post("/", IsAuthenticated, upload.single("image"), createPublicationValid
  * @swagger
  * /api/publications:
  *   get:
- *     summary: Récupérer toutes les publications
+ *     summary: Récupérer toutes les publications avec leurs commentaires
  *     tags: [Publications]
  *     responses:
  *       200:
@@ -218,7 +262,7 @@ router.post("/", IsAuthenticated, upload.single("image"), createPublicationValid
  *                 publications:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Publication'
+ *                     $ref: '#/components/schemas/PublicationWithComments'
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -236,7 +280,7 @@ router.get("/", getAllPublications);
  * @swagger
  * /api/publications/{id}:
  *   get:
- *     summary: Récupérer une publication par ID
+ *     summary: Récupérer une publication par ID avec ses commentaires
  *     tags: [Publications]
  *     parameters:
  *       - in: path
@@ -251,7 +295,7 @@ router.get("/", getAllPublications);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Publication'
+ *               $ref: '#/components/schemas/PublicationWithComments'
  *       404:
  *         description: Publication non trouvée
  *         content:
@@ -275,22 +319,24 @@ router.get("/", getAllPublications);
  */
 router.get("/:id", getPublicationById);
 
-
 /**
  * @swagger
- * /api/publications:
+ * /api/publications/details/comments:
  *   get:
- *     summary: Récupérer toutes les publications
+ *     summary: Récupérer toutes les publications sans commentaires
  *     tags: [Publications]
  *     responses:
  *       200:
- *         description: Liste des publications
+ *         description: Liste des publications sans commentaires
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Publication'
+ *               type: object
+ *               properties:
+ *                 publications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Publication'
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -302,13 +348,13 @@ router.get("/:id", getPublicationById);
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.get("/", getAllPublicationsDetails);
+router.get("/details/comments", getAllPublicationsDetails);
 
 /**
  * @swagger
- * /api/publications/{id}:
+ * /api/publications/{id}/details/comments:
  *   get:
- *     summary: Récupérer une publication par ID
+ *     summary: Récupérer une publication par ID sans commentaires
  *     tags: [Publications]
  *     parameters:
  *       - in: path
@@ -319,7 +365,7 @@ router.get("/", getAllPublicationsDetails);
  *         description: ID de la publication
  *     responses:
  *       200:
- *         description: Détails de la publication
+ *         description: Détails de la publication sans commentaires
  *         content:
  *           application/json:
  *             schema:
@@ -345,7 +391,7 @@ router.get("/", getAllPublicationsDetails);
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
-router.get("/:id", getPublicationByIdDetails);
+router.get("/:id/details/comments", getPublicationByIdDetails);
 
 /**
  * @swagger
@@ -383,7 +429,7 @@ router.get("/:id", getPublicationByIdDetails);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Publication'
+ *               $ref: '#/components/schemas/PublicationWithComments'
  *       403:
  *         description: Non autorisé à modifier cette publication
  *         content:
@@ -496,7 +542,7 @@ router.delete("/:id/delete", IsAuthenticated, deletePublication);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Publication'
+ *               $ref: '#/components/schemas/PublicationWithComments'
  *       404:
  *         description: Publication non trouvée
  *       500:
@@ -522,7 +568,7 @@ router.put("/:id/react/like", likePublication);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Publication'
+ *               $ref: '#/components/schemas/PublicationWithComments'
  *       404:
  *         description: Publication non trouvée
  *       500:

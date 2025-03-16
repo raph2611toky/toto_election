@@ -2,7 +2,6 @@ const Publication = require("../models/publication.model");
 const Comment = require("../models/comment.model");
 const cloudinary = require("../config/cloudinary.config");
 const { deleteImageFromCloudinary } = require("../utils/cloudinary.utils");
-const { log } = require("console");
 const fs = require("fs").promises;
 
 exports.createPublication = async (req, res) => {
@@ -32,7 +31,7 @@ exports.createPublication = async (req, res) => {
             titre: req.body.titre,
         };
         const newPublication = await Publication.create(publicationData);
-        newPublication.comment_count = 0; // Nouvelle publication, aucun commentaire
+        newPublication.comment_count = 0;
 
         res.status(201).json(newPublication);
     } catch (error) {
@@ -44,12 +43,14 @@ exports.createPublication = async (req, res) => {
 exports.getAllPublications = async (req, res) => {
     try {
         const publications = await Publication.getAll();
-        const formattedPublications = publications.map(pub => ({
-            ...pub,
-            comment_count: pub.comments.length,
-            comments: pub.comments
-        }));
-        res.status(200).json({ publications: formattedPublications });
+        const formattedPublications = publications.map(pub => {
+            const { comments, ...rest } = pub;
+            return {
+                ...rest,
+                comment_count: pub.comments.length
+            };
+        });
+        res.status(200).json(formattedPublications);
     } catch (error) {
         console.error("Erreur lors de la récupération des publications:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -58,7 +59,50 @@ exports.getAllPublications = async (req, res) => {
 
 exports.getPublicationById = async (req, res) => {
     try {
-        const publication = await Publication.getById(parseInt(req.params.id));
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
+        if (!publication) {
+            return res.status(404).json({ error: "Publication non trouvée" });
+        }
+        const { comments, ...rest } = publication;
+        const formattedPublication = {
+            ...rest,
+            comment_count: publication.comments.length
+        };
+        res.status(200).json(formattedPublication);
+    } catch (error) {
+        console.error("Erreur lors de la récupération de la publication:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.getAllPublicationsDetails = async (req, res) => {
+    try {
+        const publications = await Publication.getAll();
+        const formattedPublications = publications.map(pub => ({
+            ...pub,
+            comment_count: pub.comments.length,
+            comments: pub.comments
+        }));
+        res.status(200).json(formattedPublications);
+    } catch (error) {
+        console.error("Erreur lors de la récupération des publications:", error);
+        res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.getPublicationByIdDetails = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
@@ -74,40 +118,14 @@ exports.getPublicationById = async (req, res) => {
     }
 };
 
-exports.getAllPublicationsDetails = async (req, res) => {
-    try {
-        const publications = await Publication.getAll();
-        const formattedPublications = publications.map(pub => ({
-            ...pub,
-            comment_count: pub.comments.length
-        }));
-        res.status(200).json({ publications: formattedPublications });
-    } catch (error) {
-        console.error("Erreur lors de la récupération des publications:", error);
-        res.status(500).json({ error: "Erreur interne du serveur" });
-    }
-};
-
-exports.getPublicationByIdDetails = async (req, res) => {
-    try {
-        const publication = await Publication.getById(parseInt(req.params.id));
-        if (!publication) {
-            return res.status(404).json({ error: "Publication non trouvée" });
-        }
-        const formattedPublication = {
-            ...publication,
-            comment_count: publication.comments.length,
-        };
-        res.status(200).json(formattedPublication);
-    } catch (error) {
-        console.error("Erreur lors de la récupération de la publication:", error);
-        res.status(500).json({ error: "Erreur interne du serveur" });
-    }
-};
-
 exports.updatePublication = async (req, res) => {
     try {
-        const publication = await Publication.getById(parseInt(req.params.id));
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
@@ -138,11 +156,12 @@ exports.updatePublication = async (req, res) => {
             await fs.unlink(req.file.path);
         }
 
-        const updatedPublication = await Publication.update(parseInt(req.params.id), updateData);
-        const comments = await Comment.getByPublicationId(updatedPublication.id);
-        updatedPublication.comment_count = comments.length;
-
-        res.status(200).json(updatedPublication);
+        const updatedPublication = await Publication.update(id, updateData);
+        res.status(200).json({
+            ...updatedPublication,
+            comment_count: updatedPublication.comments.length,
+            comments: updatedPublication.comments
+        });
     } catch (error) {
         console.error("Erreur lors de la mise à jour de la publication:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -151,7 +170,12 @@ exports.updatePublication = async (req, res) => {
 
 exports.deletePublication = async (req, res) => {
     try {
-        const publication = await Publication.getById(parseInt(req.params.id));
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
@@ -163,7 +187,7 @@ exports.deletePublication = async (req, res) => {
             await deleteImageFromCloudinary(publication.image_url);
         }
 
-        await Publication.delete(parseInt(req.params.id));
+        await Publication.delete(id);
         res.status(204).send();
     } catch (error) {
         console.error("Erreur lors de la suppression de la publication:", error);
@@ -173,18 +197,24 @@ exports.deletePublication = async (req, res) => {
 
 exports.likePublication = async (req, res) => {
     try {
-        const publication = await Publication.getById(parseInt(req.params.id));
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
 
-        const updatedPublication = await Publication.update(parseInt(req.params.id), {
+        const updatedPublication = await Publication.update(id, {
             reactions: publication.reactions + 1
         });
-        const comments = await Comment.getByPublicationId(updatedPublication.id);
-        updatedPublication.comment_count = comments.length;
-
-        res.status(200).json(updatedPublication);
+        res.status(200).json({
+            ...updatedPublication,
+            comment_count: updatedPublication.comments.length,
+            comments: updatedPublication.comments
+        });
     } catch (error) {
         console.error("Erreur lors de la réaction à la publication:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -193,18 +223,24 @@ exports.likePublication = async (req, res) => {
 
 exports.dislikePublication = async (req, res) => {
     try {
-        const publication = await Publication.getById(parseInt(req.params.id));
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide, doit être un nombre" });
+        }
+
+        const publication = await Publication.getById(id);
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
 
-        const updatedPublication = await Publication.update(parseInt(req.params.id), {
+        const updatedPublication = await Publication.update(id, {
             reactions: publication.reactions - 1 > 0 ? publication.reactions - 1 : 0
         });
-        const comments = await Comment.getByPublicationId(updatedPublication.id);
-        updatedPublication.comment_count = comments.length;
-
-        res.status(200).json(updatedPublication);
+        res.status(200).json({
+            ...updatedPublication,
+            comment_count: updatedPublication.comments.length,
+            comments: updatedPublication.comments
+        });
     } catch (error) {
         console.error("Erreur lors de la réaction à la publication:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
