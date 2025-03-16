@@ -14,17 +14,46 @@ class Publication {
     }
 
     static fromPrisma(publication) {
-        return new Publication(publication.id, publication.titre, publication.user_id, publication.image_url, publication.contenu, publication.reactions, publication.created_at, publication.updated_at);
+        const pub = new Publication(
+            publication.id,
+            publication.titre,
+            publication.user_id,
+            publication.image_url,
+            publication.contenu,
+            publication.reactions,
+            publication.created_at,
+            publication.updated_at
+        );
+        pub.comments = publication.comments || [];
+        return pub;
     }
 
     static async getById(id) {
-        const publication = await prisma.publication.findUnique({ where: { id } });
+        const publication = await prisma.publication.findUnique({
+            where: { id },
+            include: {
+                comments: {
+                    include: {
+                        first_message: true,
+                        replies: true
+                    }
+                }
+            }
+        });
         return publication ? Publication.fromPrisma(publication) : null;
     }
-
+    
     static async getAll() {
         const publications = await prisma.publication.findMany({
-            include: { user: true }, // Inclure les informations de l'admin
+            include: {
+                user: true,
+                comments: {
+                    include: {
+                        first_message: true,
+                        replies: true
+                    }
+                }
+            }
         });
         return publications.map(Publication.fromPrisma);
     }

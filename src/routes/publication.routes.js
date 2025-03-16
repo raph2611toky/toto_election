@@ -25,6 +25,65 @@ const upload = require("../config/multer.config"); // Middleware Multer
  * @swagger
  * components:
  *   schemas:
+ *     Comment:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: ID unique du commentaire
+ *         publication_id:
+ *           type: integer
+ *           description: ID de la publication associée
+ *         first_message:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             content:
+ *               type: string
+ *             reactions:
+ *               type: integer
+ *             created_at:
+ *               type: string
+ *               format: date-time
+ *             updated_at:
+ *               type: string
+ *               format: date-time
+ *         replies:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               content:
+ *                 type: string
+ *               reactions:
+ *                 type: integer
+ *               created_at:
+ *                 type: string
+ *                 format: date-time
+ *               updated_at:
+ *                 type: string
+ *                 format: date-time
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *       example:
+ *         id: 1
+ *         publication_id: 1
+ *         first_message:
+ *           id: 1
+ *           content: "Super publication !"
+ *           reactions: 2
+ *           created_at: "2023-10-01T10:05:00Z"
+ *           updated_at: "2023-10-01T10:05:00Z"
+ *         replies: []
+ *         created_at: "2023-10-01T10:05:00Z"
+ *         updated_at: "2023-10-01T10:05:00Z"
  *     Publication:
  *       type: object
  *       required:
@@ -50,6 +109,11 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *         comment_count:
  *           type: integer
  *           description: Nombre de commentaires
+ *         comments:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Comment'
+ *           description: Liste des commentaires associés
  *         created_at:
  *           type: string
  *           format: date-time
@@ -64,6 +128,19 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *         image_url: "https://res.cloudinary.com/example/image/upload/v1234567890/publications/publication.jpg"
  *         contenu: "Ceci est une publication de test."
  *         reactions: 0
+ *         comment_count: 1
+ *         comments:
+ *           - id: 1
+ *             publication_id: 1
+ *             first_message:
+ *               id: 1
+ *               content: "Super publication !"
+ *               reactions: 2
+ *               created_at: "2023-10-01T10:05:00Z"
+ *               updated_at: "2023-10-01T10:05:00Z"
+ *             replies: []
+ *             created_at: "2023-10-01T10:05:00Z"
+ *             updated_at: "2023-10-01T10:05:00Z"
  *         created_at: "2023-10-01T10:00:00Z"
  *         updated_at: "2023-10-01T10:00:00Z"
  */
@@ -132,13 +209,16 @@ router.post("/", IsAuthenticated, upload.single("image"), createPublicationValid
  *     tags: [Publications]
  *     responses:
  *       200:
- *         description: Liste des publications
+ *         description: Liste des publications avec leurs commentaires
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Publication'
+ *               type: object
+ *               properties:
+ *                 publications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Publication'
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -167,7 +247,7 @@ router.get("/", getAllPublications);
  *         description: ID de la publication
  *     responses:
  *       200:
- *         description: Détails de la publication
+ *         description: Détails de la publication avec ses commentaires
  *         content:
  *           application/json:
  *             schema:

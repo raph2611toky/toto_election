@@ -44,15 +44,11 @@ exports.createPublication = async (req, res) => {
 exports.getAllPublications = async (req, res) => {
     try {
         const publications = await Publication.getAll();
-        const formattedPublications = await Promise.all(
-            publications.map(async (publication) => {
-                const comments = await Comment.getByPublicationId(publication.id);
-                return {
-                    ...publication,
-                    comment_count: comments.length
-                };
-            })
-        );
+        const formattedPublications = publications.map(pub => ({
+            ...pub,
+            comment_count: pub.comments.length,
+            comments: pub.comments
+        }));
         res.status(200).json({ publications: formattedPublications });
     } catch (error) {
         console.error("Erreur lors de la récupération des publications:", error);
@@ -66,10 +62,10 @@ exports.getPublicationById = async (req, res) => {
         if (!publication) {
             return res.status(404).json({ error: "Publication non trouvée" });
         }
-        const comments = await Comment.getByPublicationId(publication.id);
         const formattedPublication = {
             ...publication,
-            comment_count: comments.length
+            comment_count: publication.comments.length,
+            comments: publication.comments
         };
         res.status(200).json(formattedPublication);
     } catch (error) {
