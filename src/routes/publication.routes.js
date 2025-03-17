@@ -206,6 +206,7 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *             required:
  *               - image
  *               - contenu
+ *               - titre
  *             properties:
  *               image:
  *                 type: string
@@ -215,6 +216,10 @@ const upload = require("../config/multer.config"); // Middleware Multer
  *                 type: string
  *                 description: Contenu de la publication
  *                 example: "Ceci est une publication de test."
+ *               titre:
+ *                 type: string
+ *                 description: titre de la publication
+ *                 example: "Nouveau publication qui déchire."
  *     responses:
  *       201:
  *         description: Publication créée avec succès

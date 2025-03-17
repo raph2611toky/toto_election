@@ -59,12 +59,33 @@ class Publication {
     }
 
     static async create(data) {
-        const newPublication = await prisma.publication.create({ data });
+        const newPublication = await prisma.publication.create({
+            data: {
+                user_id: data.user_id,
+                image_url: data.image_url,
+                contenu: data.contenu,
+                titre: data.titre || "",
+            },
+        });
         return Publication.fromPrisma(newPublication);
     }
 
     static async update(id, data) {
-        const updatedPublication = await prisma.publication.update({ where: { id }, data });
+        const validFields = {
+            titre: data.titre,
+            contenu: data.contenu,
+            image_url: data.image_url,
+            reactions: data.reactions,
+        };
+    
+        const filteredData = Object.fromEntries(
+            Object.entries(validFields).filter(([_, value]) => value !== undefined)
+        );
+    
+        const updatedPublication = await prisma.publication.update({
+            where: { id },
+            data: filteredData,
+        });
         return Publication.fromPrisma(updatedPublication);
     }
 
