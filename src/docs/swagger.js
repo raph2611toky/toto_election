@@ -13,6 +13,9 @@ const options = {
       {
         url: 'https://phenix-nu.vercel.app',
       },
+      {
+        url: 'https://toto-election-1.onrender.com',
+      },
     ],
   },
   components: {
