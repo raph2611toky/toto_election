@@ -59,6 +59,8 @@ class Publication {
     }
 
     static async create(data) {
+        console.log(data);
+        
         const newPublication = await prisma.publication.create({
             data: {
                 user_id: data.user_id,
