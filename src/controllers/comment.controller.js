@@ -127,16 +127,13 @@ exports.getMessagesByComment = async (req, res) => {
 
 exports.likeMessage = async (req, res) => {
     try {
-        const message = await Message.getById(parseInt(req.params.messageId));
+        const messageId = parseInt(req.params.messageId);
+        const message = await Message.getById(messageId);
         if (!message) {
             return res.status(404).json({ error: "Message non trouvé" });
         }
 
-        const updatedMessage = await prisma.message.update({
-            where: { id: message.id },
-            data: { reactions: message.reactions + 1 }
-        });
-
+        const updatedMessage = await Message.updateLike(messageId);
         res.status(200).json(updatedMessage);
     } catch (error) {
         console.error("Erreur lors de la réaction au message:", error);
@@ -146,16 +143,13 @@ exports.likeMessage = async (req, res) => {
 
 exports.dislikeMessage = async (req, res) => {
     try {
-        const message = await Message.getById(parseInt(req.params.messageId));
+        const messageId = parseInt(req.params.messageId);
+        const message = await Message.getById(messageId);
         if (!message) {
             return res.status(404).json({ error: "Message non trouvé" });
         }
 
-        const updatedMessage = await prisma.message.update({
-            where: { id: message.id },
-            data: { reactions: message.reactions - 1? message.reactions - 1: 0 }
-        });
-
+        const updatedMessage = await Message.updateDislike(messageId);
         res.status(200).json(updatedMessage);
     } catch (error) {
         console.error("Erreur lors de la réaction au message:", error);

@@ -24,6 +24,22 @@ class Message {
         return Message.fromPrisma(newMessage);
     }
 
+    static async updateLike(id) {
+        const message = await prisma.message.findUnique({ where: { id } });
+        return await prisma.message.update({
+            where: { id },
+            data: { reactions: message.reactions + 1 }
+        });
+    }
+
+    static async updateDislike(id) {
+        const message = await prisma.message.findUnique({ where: { id } });
+        return await prisma.message.update({
+            where: { id },
+            data: { reactions: message.reactions > 0 ? message.reactions - 1 : 0 }
+        });
+    }
+
     static async delete(id) {
         return await prisma.message.delete({ where: { id } });
     }

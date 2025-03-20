@@ -31,14 +31,14 @@ model Publication {
   reactions  Int       @default(0)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
-  comments   Comment[]
+  comments   Comment[] 
 }
 
 model Comment {
   id               Int         @id @default(autoincrement())
-  publication      Publication @relation(fields: [publication_id], references: [id])
+  publication      Publication @relation(fields: [publication_id], references: [id], onDelete: Cascade)
   publication_id   Int
-  first_message    Message     @relation(name: "CommentFirstMessage", fields: [first_message_id], references: [id])
+  first_message    Message     @relation(name: "CommentFirstMessage", fields: [first_message_id], references: [id], onDelete: Cascade)
   first_message_id Int         @unique
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
@@ -52,6 +52,6 @@ model Message {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
   commentFirst   Comment? @relation(name: "CommentFirstMessage")
-  commentReplies Comment? @relation(name: "CommentReplies", fields: [comment_id], references: [id])
+  commentReplies Comment? @relation(name: "CommentReplies", fields: [comment_id], references: [id], onDelete: SetNull)
   comment_id     Int?
 }
