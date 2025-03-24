@@ -33,12 +33,13 @@ exports.registerAdmin = async (req, res) => {
 
         const adminData = {
             ...req.body,
-            profile: profileUrl
+            profile: profileUrl,
+            role: req.body.role || "ADMIN"
         };
         const newAdmin = await User.create(adminData);
-        const token = generateToken({ id: newAdmin.id });
+        const token = generateToken({ id: newAdmin.id, role: newAdmin.role });
 
-        res.status(201).json({ email: newAdmin.email, token });
+        res.status(201).json({ email: newAdmin.email, role: newAdmin.role, token });
     } catch (error) {
         console.error("Erreur lors de la création de l'administrateur:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -55,9 +56,9 @@ exports.loginAdmin = async (req, res) => {
         }
 
         await User.update(user.id, { is_active: true });
-        const token = generateToken({ id: user.id });
+        const token = generateToken({ id: user.id, role: user.role });
 
-        res.status(200).json({ name: user.name, token });
+        res.status(200).json({ name: user.name, role: user.role, token });
     } catch (error) {
         console.error("Erreur lors de la connexion:", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
@@ -113,6 +114,10 @@ exports.updateAdminProfile = async (req, res) => {
             updateData.profile = await uploadDefaultProfileImage();
         }
 
+        if (req.body.role) {
+            updateData.role = req.body.role;
+        }
+
         const updatedUser = await User.update(req.user.id, updateData);
         res.status(200).json(updatedUser);
     } catch (error) {
@@ -120,6 +125,7 @@ exports.updateAdminProfile = async (req, res) => {
         res.status(500).json({ error: "Erreur interne du serveur" });
     }
 };
+
 
 exports.logout = async (req, res) => {
     try {

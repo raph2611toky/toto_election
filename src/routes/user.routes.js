@@ -23,11 +23,6 @@ const upload = require("../config/multer.config");
 /**
  * @swagger
  * components:
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
  *   schemas:
  *     Admin:
  *       type: object
@@ -58,6 +53,10 @@ const upload = require("../config/multer.config");
  *         is_active:
  *           type: boolean
  *           description: Statut d'activité de l'administrateur
+ *         role:
+ *           type: string
+ *           enum: [ADMIN, MODERATEUR, VISITEUR]
+ *           description: Rôle de l'utilisateur
  *         created_at:
  *           type: string
  *           format: date-time
@@ -74,6 +73,7 @@ const upload = require("../config/multer.config");
  *         phone: "+261341234567"
  *         profile: "https://res.cloudinary.com/example/image/upload/v1234567890/admin_profiles/profile.jpg"
  *         is_active: true
+ *         role: "ADMIN"
  *         created_at: "2023-10-01T10:00:00Z"
  *         updated_at: "2023-10-01T10:00:00Z"
  */
@@ -209,6 +209,10 @@ router.get("/me", IsAuthenticated, getAdminProfile);
  *                 error:
  *                   type: string
  *                   example: "Cet administrateur s'est déjà enregistré"
+ *               role:
+ *                 type: string
+ *                 enum: [ADMIN, MODERATEUR, VISITEUR]
+ *                 description: Rôle de l'utilisateur (optionnel, par défaut ADMIN)
  *       500:
  *         description: Erreur interne du serveur
  *         content:
@@ -318,6 +322,10 @@ router.post("/login", loginAdmin);
  *                 type: string
  *                 format: binary
  *                 description: Nouvelle image de profil (optionnel, l'image par défaut sera utilisée si aucune image n'existe encore)
+ *               role:
+ *                 type: string
+ *                 enum: [ADMIN, MODERATEUR, VISITEUR]
+ *                 description: Rôle de l'utilisateur (optionnel, par défaut ADMIN)
  *     responses:
  *       200:
  *         description: Profil mis à jour avec succès

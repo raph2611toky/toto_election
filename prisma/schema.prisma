@@ -8,6 +8,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Role {
+  ADMIN
+  MODERATEUR
+  VISITEUR
+}
+
 model User {
   id          Int           @id @default(autoincrement())
   name        String
@@ -16,6 +22,7 @@ model User {
   phone       String
   profile     String        @default("profile.png")
   is_active   Boolean       @default(false)
+  role        Role          @default(ADMIN)
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
   publication Publication[]

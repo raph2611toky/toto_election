@@ -3,7 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class User {
-    constructor(id, name, email, password, phone, profile = "profile.png", is_active = false, created_at = null, updated_at = null) {
+    constructor(id, name, email, password, phone, profile = "profile.png", is_active = false, role = "ADMIN", created_at = null, updated_at = null) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -11,12 +11,13 @@ class User {
         this.phone = phone;
         this.profile = profile;
         this.is_active = is_active;
+        this.role = role;
         this.created_at = created_at;
         this.updated_at = updated_at;
     }
 
     static fromPrisma(user) {
-        return new User(user.id, user.name, user.email, user.password, user.phone, user.profile, user.is_active, user.created_at, user.updated_at);
+        return new User(user.id, user.name, user.email, user.password, user.phone, user.profile, user.is_active, user.role, user.created_at, user.updated_at);
     }
 
     static async getById(id) {
